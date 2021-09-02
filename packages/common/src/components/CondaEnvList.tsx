@@ -4,6 +4,7 @@ import { CONDA_ENVIRONMENT_PANEL_ID } from '../constants';
 import { Conda } from '../tokens';
 import { CondaEnvItem } from './CondaEnvItem';
 import { CondaEnvToolBar, ENVIRONMENT_TOOLBAR_HEIGHT } from './CondaEnvToolBar';
+import { CondaStore } from '..';
 
 export const ENVIRONMENT_PANEL_WIDTH = 250;
 
@@ -23,6 +24,12 @@ export interface IEnvListProps {
    * Environment list
    */
   environments: Array<Conda.IEnvironment>;
+
+  /**
+   * Conda Store Environment list
+   */
+  conda_store_environments: Array<CondaStore.IEnvironment>;
+  
   /**
    * Currently selected environment
    */
@@ -65,20 +72,26 @@ export const CondaEnvList: React.FunctionComponent<IEnvListProps> = (
 ) => {
   let isDefault = false;
   const listItems = props.environments.map((env, idx) => {
+    const conda_store_idx = Math.min(props.conda_store_environments.length -1, idx);
+    const conda_store_env = props.conda_store_environments[conda_store_idx];
     const selected = env.name === props.selected;
     if (selected) {
       // Forbid clone and removing the environment named "base" (base conda environment)
       // and the default one (i.e. the one containing JupyterLab)
       isDefault = env.is_default || env.name === 'base';
     }
-    return (
-      <CondaEnvItem
-        name={env.name}
-        key={env.name}
-        selected={props.selected ? env.name === props.selected : false}
-        onClick={props.onSelectedChange}
-      />
-    );
+    if(idx <= props.conda_store_environments.length -1){
+      return (
+        <CondaEnvItem
+          name={conda_store_env.name}
+          key={env.name}
+          selected={props.selected ? env.name === props.selected : false}
+          onClick={props.onSelectedChange}
+        />
+      );
+    }else{
+      return null;
+    }
   });
 
   return (

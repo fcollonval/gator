@@ -3,6 +3,7 @@ import { Widget } from '@lumino/widgets';
 import { INotification } from 'jupyterlab_toastify';
 import * as React from 'react';
 import { style } from 'typestyle';
+import { CondaStore } from '..';
 import { Conda, IEnvironmentManager } from '../tokens';
 import { CondaEnvList, ENVIRONMENT_PANEL_WIDTH } from './CondaEnvList';
 import { CondaPkgPanel } from './CondaPkgPanel';
@@ -34,6 +35,10 @@ export interface ICondaEnvState {
    */
   environments: Array<Conda.IEnvironment>;
   /**
+   * Conda Store Environment list
+   */
+  conda_store_environments: Array<CondaStore.IEnvironment>;
+  /**
    * Active environment
    */
   currentEnvironment?: string;
@@ -54,6 +59,7 @@ export class NbConda extends React.Component<ICondaEnvProps, ICondaEnvState> {
 
     this.state = {
       environments: [],
+      conda_store_environments: [],
       currentEnvironment: undefined,
       isLoading: false
     };
@@ -360,7 +366,8 @@ export class NbConda extends React.Component<ICondaEnvProps, ICondaEnvState> {
       this.setState({ isLoading: true });
       try {
         const newState: Partial<ICondaEnvState> = {
-          environments: await this.props.model.environments
+          environments: await this.props.model.environments,
+          conda_store_environments: await CondaStore.fetchEnvironments()
         };
         if (this.state.currentEnvironment === undefined) {
           newState.environments.forEach(env => {
@@ -394,6 +401,7 @@ export class NbConda extends React.Component<ICondaEnvProps, ICondaEnvState> {
           height={this.props.height}
           isPending={this.state.isLoading}
           environments={this.state.environments}
+          conda_store_environments = {this.state.conda_store_environments}
           selected={this.state.currentEnvironment}
           onSelectedChange={this.handleEnvironmentChange}
           onCreate={this.handleCreateEnvironment}
