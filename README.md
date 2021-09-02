@@ -94,20 +94,22 @@ Open JupyterLab: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybind
 First, set up the environment:
 
 ```shell
-mamba create -c conda-forge -y -n gator python jupyterlab
+mamba create -c conda-forge -y -n gator python jupyterlab=3
 mamba install -c conda-forge -y -n gator --file requirements_dev.txt
 conda activate gator
+pip install -e .
+jupyter server extension enable mamba_gator --sys-prefix
 ```
 
-Clone the repo, install it with `pip`, and then watch for changes to the
-javascript:
+To automatically watch frontend for changes as you develop, clone the repo,
+install it with `pip`, and then run `yarn watch`:
 
 ```bash
 git clone git@github.com:quansight/gator
 cd gator
 pip install -e .
 yarn install
-./node_modules/.bin/lerna run watch --parallel  # <-- enable automatic rebuilds
+yarn watch  # <-- enable automatic rebuilds
 ```
 
 Elsewhere, start the jupyter server in watch mode:

@@ -13,6 +13,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
   CondaEnvironments,
   CondaEnvWidget,
+  CondaStoreEnvWidget,
   condaIcon,
   CONDA_WIDGET_CLASS,
   IEnvironmentManager
@@ -26,8 +27,105 @@ import {
 } from './validator';
 
 const CONDAENVID = '@mamba-org/gator-lab:plugin';
+const CONDASTOREENVID = '@condastore/gator-lab:plugin';
 const TOUR_DELAY = 1000;
 const TOUR_TIMEOUT = 5 * TOUR_DELAY + 1;
+
+async function activateCondaStoreEnv(
+  app: JupyterFrontEnd,
+  palette: ICommandPalette | null,
+  menu: IMainMenu | null,
+  restorer: ILayoutRestorer | null
+): Promise<void> {
+  let tour: any;
+  const { commands, shell } = app;
+  const pluginNamespace = 'conda-store-env';
+  const command = 'jupyter_conda_store:open-ui';
+
+  // Track and restore the widget state
+  const tracker = new WidgetTracker<MainAreaWidget<CondaStoreEnvWidget>>({
+    namespace: pluginNamespace
+  });
+  let condaWidget: MainAreaWidget<CondaStoreEnvWidget>;
+
+  commands.addCommand(command, {
+    label: 'Conda Store Packages Manager',
+    execute: () => {
+      app.restored.then(() => {
+        let timeout = 0;
+
+        const delayTour = (): void => {
+          setTimeout(() => {
+            timeout += TOUR_DELAY;
+            if (condaWidget?.isVisible && tour) {
+              commands.execute('jupyterlab-tour:launch', {
+                id: tour.id,
+                force: false
+              });
+            } else if (timeout < TOUR_TIMEOUT) {
+              delayTour();
+            }
+          }, 1000);
+        };
+
+        if (commands.hasCommand('jupyterlab-tour:add')) {
+          if (!tour) {
+            commands
+              .execute('jupyterlab-tour:add', {
+                tour: managerTour as any
+              })
+              .then(result => {
+                tour = result;
+              });
+          }
+
+          delayTour();
+        }
+      });
+
+      if (!condaWidget || condaWidget.isDisposed) {
+        condaWidget = new MainAreaWidget({
+          content: new CondaStoreEnvWidget()
+        });
+        condaWidget.addClass(CONDA_WIDGET_CLASS);
+        condaWidget.id = pluginNamespace;
+        condaWidget.title.label = 'Packages';
+        condaWidget.title.caption = 'Conda Store Packages Manager';
+        condaWidget.title.icon = condaIcon;
+      }
+
+      if (!tracker.has(condaWidget)) {
+        // Track the state of the widget for later restoration
+        tracker.add(condaWidget);
+      }
+      if (!condaWidget.isAttached) {
+        // Attach the widget to the main work area if it's not there
+        shell.add(condaWidget, 'main');
+      }
+      shell.activateById(condaWidget.id);
+    }
+  });
+
+  // Add command to command palette
+  if (palette) {
+    palette.addItem({ command, category: 'Settings' });
+  }
+
+  // Handle state restoration.
+  if (restorer) {
+    restorer.restore(tracker, {
+      command,
+      name: () => pluginNamespace
+    });
+  }
+
+  // Add command to settings menu
+  if (menu) {
+    menu.settingsMenu.addGroup([{ command: command }], 999);
+  }
+
+  return
+}
 
 async function activateCondaEnv(
   app: JupyterFrontEnd,
@@ -175,6 +273,17 @@ const condaManager: JupyterFrontEndPlugin<IEnvironmentManager> = {
 };
 
 /**
+ * Initialization data for the @mamba-org/gator-lab extension.
+ */
+ const condaStoreManager: JupyterFrontEndPlugin<void> = {
+  id: CONDASTOREENVID,
+  autoStart: true,
+  activate: activateCondaStoreEnv,
+  optional: [ICommandPalette, IMainMenu, ILayoutRestorer],
+  provides: IEnvironmentManager
+};
+
+/**
  * Initialization data for the jupyterlab_kernel_companions extension.
  */
 const companions: JupyterFrontEndPlugin<ICompanionValidator> = {
@@ -186,7 +295,7 @@ const companions: JupyterFrontEndPlugin<ICompanionValidator> = {
   provides: ICompanionValidator
 };
 
-const extensions = [condaManager, companions];
+const extensions = [condaManager, condaStoreManager, companions];
 
 export default extensions;
 

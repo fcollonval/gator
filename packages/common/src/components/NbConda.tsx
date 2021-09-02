@@ -378,6 +378,7 @@ export class NbConda extends React.Component<ICondaEnvProps, ICondaEnvState> {
         if (error !== 'cancelled') {
           console.error(error);
           INotification.error(error.message);
+          this.setState({ isLoading: false });
         }
       }
     }
@@ -415,7 +416,7 @@ export class NbConda extends React.Component<ICondaEnvProps, ICondaEnvState> {
   }
 }
 
-namespace Style {
+export namespace Style {
   export const Panel = style({
     width: '100%',
     display: 'flex',
