@@ -82,11 +82,14 @@ export namespace Conda {
   /**
    * Description of the REST API response for each environment
    */
-  export interface IEnvironment {
+  export interface IEnvironmentBase {
     /**
      * Environment name
      */
     name: string;
+  }
+
+  export interface IEnvironment extends IEnvironmentBase {
     /**
      * Environment path
      */
@@ -233,14 +236,14 @@ export namespace Conda {
   export interface IPackage {
     name: string;
     version: Array<string>;
-    build_number: Array<number>;
-    build_string: Array<string>;
+    build_number?: Array<number>;
+    build_string?: Array<string>;
     channel: string;
-    platform: string;
-    summary: string;
-    home: string;
-    keywords: string;
-    tags: string;
+    platform?: string;
+    summary?: string;
+    home?: string;
+    keywords?: string;
+    tags?: string;
     version_installed?: string;
     version_selected?: string;
     updatable?: boolean;
