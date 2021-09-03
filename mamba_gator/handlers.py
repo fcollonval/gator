@@ -20,6 +20,7 @@ from typing import Any, Callable, ClassVar, Dict, NoReturn
 import tornado
 
 from .envmanager import EnvManager
+from .condastoreenvmanager import CondaStoreEnvManager
 from .log import get_logger
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
@@ -132,6 +133,13 @@ class EnvBaseHandler(APIHandler):
         return self.settings["env_manager"]
 
     @property
+    def uses_conda_store(self) -> bool:
+        """ Return the boolean value stored in `uses_conda_store` setting,
+        True if the extension uses Conda Store, False otherwise """
+
+        return self.settings["uses_conda_store"]
+
+    @property
     def log(self) -> logging.Logger:
         """logging.Logger: The extension logger"""
         return get_logger()
@@ -168,10 +176,18 @@ class EnvironmentsHandler(EnvBaseHandler):
         Raises:
             500 if an error occurs
         """
-        whitelist = int(self.get_query_argument("whitelist", 0))
-        list_envs = await self.env_manager.list_envs(whitelist == 1)
-        if "error" in list_envs:
-            self.set_status(500)
+
+        if self.settings["uses_conda_store"] :
+            list_envs = await self.env_manager.list_envs()
+            # TODO error handling
+
+        else:
+
+            whitelist = int(self.get_query_argument("whitelist", 0))
+            list_envs = await self.env_manager.list_envs(whitelist == 1)
+            if "error" in list_envs:
+                self.set_status(500)
+
         self.finish(tornado.escape.json_encode(list_envs))
 
     @tornado.web.authenticated
@@ -498,9 +514,20 @@ default_handlers = [
 def _load_jupyter_server_extension(server_app):
     """Load the nbserver extension"""
     webapp = server_app.web_app
-    webapp.settings["env_manager"] = EnvManager(
+
+    webapp.settings["uses_conda_store"] = True
+
+    if not webapp.settings["uses_conda_store"]:
+        
+        webapp.settings["env_manager"] = EnvManager(
         server_app.contents_manager.root_dir, server_app.kernel_spec_manager
-    )
+        )
+
+    else:
+        webapp.settings["env_manager"] = CondaStoreEnvManager(
+            "http://localhost:5000/conda-store/api/v1/"
+        )
+
 
     base_url = webapp.settings["base_url"]
     webapp.add_handlers(
