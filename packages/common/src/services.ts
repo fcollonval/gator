@@ -418,6 +418,8 @@ export class CondaEnvironments implements IEnvironmentManager {
   private _whitelist = false;
 }
 
+export class CondaStoreEnvironments extends CondaEnvironments {}
+
 export class CondaPackage implements Conda.IPackageManager {
   /**
    * Conda environment of interest

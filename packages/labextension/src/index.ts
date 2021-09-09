@@ -12,7 +12,9 @@ import { IMainMenu } from '@jupyterlab/mainmenu';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
   CondaEnvironments,
+  CondaStoreEnvironments,
   CondaEnvWidget,
+  CondaStoreEnvWidget,
   condaIcon,
   CONDA_WIDGET_CLASS,
   IEnvironmentManager
@@ -43,16 +45,16 @@ async function activateCondaStoreEnv(
   const command = 'jupyter_conda_store:open-ui';
 
   const settings = await settingsRegistry?.load(CONDAENVID);
-  const model = new CondaEnvironments(settings);
+  const model = new CondaStoreEnvironments(settings);
 
   // Request listing available package as quickly as possible
   Private.loadPackages(model);
 
   // Track and restore the widget state
-  const tracker = new WidgetTracker<MainAreaWidget<CondaEnvWidget>>({
+  const tracker = new WidgetTracker<MainAreaWidget<CondaStoreEnvWidget>>({
     namespace: pluginNamespace
   });
-  let condaWidget: MainAreaWidget<CondaEnvWidget>;
+  let condaWidget: MainAreaWidget<CondaStoreEnvWidget>;
 
   commands.addCommand(command, {
     label: 'Conda Store Packages Manager',
@@ -91,7 +93,7 @@ async function activateCondaStoreEnv(
 
       if (!condaWidget || condaWidget.isDisposed) {
         condaWidget = new MainAreaWidget({
-          content: new CondaEnvWidget(model)
+          content: new CondaStoreEnvWidget(model)
         });
         condaWidget.addClass(CONDA_WIDGET_CLASS);
         condaWidget.id = pluginNamespace;
