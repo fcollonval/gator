@@ -4,7 +4,7 @@ import React from 'react'
 import { INotification } from 'jupyterlab_toastify'
 import { CondaStore } from '..'
 import { NbConda, Style } from './NbConda'
-import { CondaPkgPanel } from './CondaPkgPanel';
+import { CondaStorePkgPanel } from './CondaStorePkgPanel';
 import { CondaEnvList, ENVIRONMENT_PANEL_WIDTH } from './CondaEnvList';
 
 // function createNewEnvironmentDialog(environmentTypes: Array<string>): {
@@ -100,12 +100,9 @@ export class NbCondaStore extends NbConda {
                     onRefresh={this.handleRefreshEnvironment}
                     onRemove={this.handleRemoveEnvironment}
                 />
-                <CondaPkgPanel
+                <CondaStorePkgPanel
                     height={this.props.height}
                     width={this.props.width - ENVIRONMENT_PANEL_WIDTH}
-                    packageManager={this.props.model.getPackageManager(
-                        this.state.currentEnvironment
-                    )}
                 />
             </div>
         )

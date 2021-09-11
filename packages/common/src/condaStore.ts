@@ -23,6 +23,7 @@ export namespace CondaStore {
         name: string,
         sha256: string,
         version: string,
+
     }
 
     export async function fetchEnvironments(): Promise<Array<IEnvironment>> {
