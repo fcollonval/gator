@@ -82,11 +82,14 @@ export namespace Conda {
   /**
    * Description of the REST API response for each environment
    */
-  export interface IEnvironment {
+  export interface IEnvironmentBase {
     /**
      * Environment name
      */
     name: string;
+  }
+
+  export interface IEnvironment extends IEnvironmentBase {
     /**
      * Environment path
      */

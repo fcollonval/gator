@@ -107,7 +107,7 @@ git clone git@github.com:quansight/gator
 cd gator
 pip install -e .
 yarn install
-./node_modules/.bin/lerna run watch --parallel  # <-- enable automatic rebuilds
+lerna run watch --parallel  # <-- enable automatic rebuilds
 ```
 
 Elsewhere, start the jupyter server in watch mode:

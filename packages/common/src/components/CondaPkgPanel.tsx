@@ -13,7 +13,7 @@ import {
 import { PkgGraphWidget } from './PkgGraph';
 
 // Minimal panel width to show package description
-const PANEL_SMALL_WIDTH = 500;
+export const PANEL_SMALL_WIDTH = 500;
 
 /**
  * Package panel property
@@ -524,7 +524,7 @@ export class CondaPkgPanel extends React.Component<
   private _currentEnvironment = '';
 }
 
-namespace Style {
+export namespace Style {
   export const Panel = style({
     flexGrow: 1,
     borderLeft: '1px solid var(--jp-border-color2)'

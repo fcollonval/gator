@@ -8,7 +8,7 @@ import { IEnvironmentManager } from './tokens';
 /**
  * Widget size interface
  */
-interface ISize {
+export interface ISize {
   /**
    * Widget heigth
    */
@@ -54,9 +54,9 @@ export class CondaEnvWidget extends ReactWidget {
   /**
    * Conda environment Manager
    */
-  private _envModel: IEnvironmentManager;
+  protected _envModel: IEnvironmentManager;
   /**
    * Signal triggering a React rendering if widget is resized
    */
-  private _resizeSignal = new Signal<CondaEnvWidget, ISize>(this);
+  protected _resizeSignal = new Signal<CondaEnvWidget, ISize>(this);
 }
