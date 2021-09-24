@@ -1,5 +1,3 @@
-const baseUrl = 'http://localhost:5000/api/v1'
-
 export interface ICondaStoreEnvironment {
     name: string
     build_id: number
@@ -41,6 +39,19 @@ interface IPaginatedResult<T> {
     status?: string
 }
 
+/**
+ * Construct the base URL for conda-store requests.
+ *
+ * @param {string} condaStoreUrl URL of the conda-store server
+ * @param {string} [apiRoot] - Root of the conda-store API
+ * @return {string} Base URL for requests to the conda-store server
+ */
+function getBaseUrl(
+    condaStoreUrl = 'http://localhost:5000',
+    apiRoot = 'api/v1',
+): string {
+    return `${condaStoreUrl}/${apiRoot}`
+}
 
 /**
  * Fetch all conda-store environments.
@@ -48,7 +59,8 @@ interface IPaginatedResult<T> {
  * @async
  * @return {Promise<IPaginatedResult<ICondaStoreEnvironment>>} All environments visible to conda-store.
  */
-export async function fetchEnvironments(page = 1, size = 100): Promise<IPaginatedResult<ICondaStoreEnvironment>> {
+export async function fetchEnvironments(condaStoreUrl: string, page = 1, size = 100): Promise<IPaginatedResult<ICondaStoreEnvironment>> {
+    const baseUrl = getBaseUrl(condaStoreUrl)
     const response = await fetch(`${baseUrl}/environment/?page=${page}&size=${size}`)
     if (response.ok) {
         return await response.json()
@@ -61,10 +73,12 @@ export async function fetchEnvironments(page = 1, size = 100): Promise<IPaginate
  * Search all packages (both installed and not installed) for a package.
  *
  * @async
+ * @param {string} condaStoreUrl URL of the conda-store server
  * @param {string} term - Search term; both name and descriptions are searched
  * @return {Promise<Array<ICondaStorePackage>>} Packages matching the search term.
  */
-export async function searchPackages(term: string): Promise<Array<ICondaStorePackage>> {
+export async function searchPackages(condaStoreUrl: string, term: string): Promise<Array<ICondaStorePackage>> {
+    const baseUrl = getBaseUrl(condaStoreUrl)
     const response = await fetch(`${baseUrl}/package/?search=${term}`)
     if (response.ok) {
         return await response.json()
@@ -80,7 +94,8 @@ export async function searchPackages(term: string): Promise<Array<ICondaStorePac
  * @async
  * @return {Promise<IPaginatedResult<ICondaStorePackage>>} List of available packages
  */
-export async function fetchPackages(page = 1, size = 100): Promise<IPaginatedResult<ICondaStorePackage>> {
+export async function fetchPackages(condaStoreUrl: string, page = 1, size = 100): Promise<IPaginatedResult<ICondaStorePackage>> {
+    const baseUrl = getBaseUrl(condaStoreUrl)
     const response = await fetch(`${baseUrl}/package/?page=${page}&size=${size}&distinct_on=name&distinct_on=version`)
     if (response.ok) {
         return await response.json()
@@ -93,12 +108,14 @@ export async function fetchPackages(page = 1, size = 100): Promise<IPaginatedRes
  * List the installed packages for the given environment and namespace.
  *
  * @async
+ * @param {string} condaStoreUrl URL of the conda-store server
  * @param {string} namespace - Name of the namespace to be searched
  * @param {string} environment - Name of the environment to be searched
  * @return {Promise<IPaginatedResult<ICondaStorePackage>>} List of packages in the given namespace/environment
  * combination
  */
 export async function fetchEnvironmentPackages(
+    condaStoreUrl: string,
     namespace: string,
     environment: string,
     page = 1,
@@ -111,6 +128,7 @@ export async function fetchEnvironmentPackages(
         return {}
     }
 
+    const baseUrl = getBaseUrl(condaStoreUrl)
     let response = await fetch(`${baseUrl}/environment/${namespace}/${environment}/`)
 
     if (response.ok) {
@@ -126,8 +144,10 @@ export async function fetchEnvironmentPackages(
 }
 
 export async function fetchBuildPackages(
+    condaStoreUrl: string,
     build_id: number
 ): Promise<IPaginatedResult<ICondaStorePackage>> {
+    const baseUrl = getBaseUrl(condaStoreUrl)
     const response = await fetch(`${baseUrl}/build/${build_id}/`)
     if (response.ok) {
         return await response.json()
@@ -139,10 +159,12 @@ export async function fetchBuildPackages(
  * Fetch the channels. Channels are remote repositories containing conda packages.
  *
  * @async
+ * @param {string} condaStoreUrl URL of the conda-store server
  * @return {Promise<Array<ICondaStoreChannel>>} List of all possible channels from which packages
  * may be downloaded..
  */
-export async function fetchChannels(): Promise<Array<ICondaStoreChannel>> {
+export async function fetchChannels(condaStoreUrl: string): Promise<Array<ICondaStoreChannel>> {
+    const baseUrl = getBaseUrl(condaStoreUrl)
     const response = await fetch(`${baseUrl}/channel/`)
     if (response.ok) {
         return await response.json()

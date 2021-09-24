@@ -17,6 +17,7 @@ interface ICondaStorePkgPanelProps {
     width: number
     namespace: string
     environment: string
+    condaStoreUrl: string
 }
 
 export interface ICondaStorePackageMapEntry {
@@ -29,6 +30,7 @@ export function CondaStorePkgPanel({
     width,
     environment,
     namespace,
+    condaStoreUrl,
 }: ICondaStorePkgPanelProps): JSX.Element {
     const [searchTerm, setSearchTerm] = useState('')
     const [activeFilter, setActiveFilter] = useState(PkgFilters.All)
@@ -111,6 +113,7 @@ export function CondaStorePkgPanel({
 
     const getInstalledPackages = useCallback(async (): Promise<Array<ICondaStorePackage>> => {
         const {count, data, page, size} = await fetchEnvironmentPackages(
+            condaStoreUrl,
             namespace,
             environment,
             installedPackagesPage,
@@ -119,15 +122,18 @@ export function CondaStorePkgPanel({
         setInstalledPackagesPage(installedPackagesPage+1)
         setHasMoreInstalledPackages(count > page*size)
         return data
-    }, [environment, namespace, installedPackagesPage])
+    }, [environment, namespace, installedPackagesPage, condaStoreUrl])
 
     const getAvailablePackages = useCallback(async (): Promise<Array<ICondaStorePackage>> => {
-        const {count, data, page, size} = await fetchPackages(packagesPage)
+        const {count, data, page, size} = await fetchPackages(
+            condaStoreUrl,
+            packagesPage
+        )
         setNPackages(count)
         setPackagesPage(packagesPage+1)
         setHasMoreData(count > page*size)
         return data
-    }, [packagesPage])
+    }, [packagesPage, condaStoreUrl])
 
     const loadPackages = useCallback(async () => {
         if (hasMoreData && !isLoading) {
