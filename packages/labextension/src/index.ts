@@ -33,10 +33,14 @@ const TOUR_TIMEOUT = 5 * TOUR_DELAY + 1;
 
 async function activateCondaStoreEnv(
   app: JupyterFrontEnd,
+  settingsRegistry: ISettingRegistry | null,
   palette: ICommandPalette | null,
   menu: IMainMenu | null,
   restorer: ILayoutRestorer | null
 ): Promise<void> {
+  const settings = await settingsRegistry?.load(CONDAENVID);
+  const condaStoreUrl = settings.get('condaStoreUrl').composite as string
+
   let tour: any;
   const { commands, shell } = app;
   const pluginNamespace = 'conda-store-env';
@@ -85,7 +89,7 @@ async function activateCondaStoreEnv(
 
       if (!condaWidget || condaWidget.isDisposed) {
         condaWidget = new MainAreaWidget({
-          content: new CondaStoreEnvWidget()
+          content: new CondaStoreEnvWidget(condaStoreUrl)
         });
         condaWidget.addClass(CONDA_WIDGET_CLASS);
         condaWidget.id = pluginNamespace;
@@ -279,7 +283,7 @@ const condaManager: JupyterFrontEndPlugin<IEnvironmentManager> = {
   id: CONDASTOREENVID,
   autoStart: true,
   activate: activateCondaStoreEnv,
-  optional: [ICommandPalette, IMainMenu, ILayoutRestorer],
+  optional: [ISettingRegistry, ICommandPalette, IMainMenu, ILayoutRestorer],
   provides: IEnvironmentManager
 };
 

@@ -8,11 +8,13 @@ import { CondaStoreEnvList, ENVIRONMENT_PANEL_WIDTH } from './CondaStoreEnvList'
 export interface INbCondaStoreProps {
     height: number
     width: number
+    condaStoreUrl: string
 }
 
 export function NbCondaStore({
     height,
     width,
+    condaStoreUrl,
 }: INbCondaStoreProps): JSX.Element {
 
     const [isLoading, setIsLoading] = useState(false)
@@ -30,13 +32,16 @@ export function NbCondaStore({
     const loadEnvironments = useCallback(async () => {
         if (hasMoreData && !isLoading) {
             setIsLoading(true)
-            const {count, data, page, size} = await fetchEnvironments(environmentPage)
+            const {count, data, page, size} = await fetchEnvironments(
+                condaStoreUrl,
+                environmentPage,
+            )
             setEnvironments([...environments, ...data])
             setEnvironmentPage(environmentPage+1)
             setHasMoreData(count > page*size)
             setIsLoading(false)
         }
-    }, [hasMoreData, isLoading, environments, environmentPage])
+    }, [hasMoreData, isLoading, environments, environmentPage, condaStoreUrl])
 
     async function environmentChange(environment: string, namespace: string): Promise<void> {
         setActiveEnvironment(environment)
@@ -102,6 +107,7 @@ export function NbCondaStore({
                 width={width - ENVIRONMENT_PANEL_WIDTH}
                 namespace={activeNamespace}
                 environment={activeEnvironment}
+                condaStoreUrl={condaStoreUrl}
             />
         </div>
     )

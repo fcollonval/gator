@@ -1,10 +1,26 @@
 import React from 'react';
-import { Signal } from '@lumino/signaling';
-import { UseSignal } from '@jupyterlab/apputils';
-import { CondaEnvWidget, ISize } from './CondaEnvWidget'
-import { NbCondaStore } from './components/NbCondaStore';
+import { ReactWidget, UseSignal } from '@jupyterlab/apputils'
+import { Widget } from '@lumino/widgets';
+import { Signal } from '@lumino/signaling'
+import { NbCondaStore } from './components/NbCondaStore'
 
-export class CondaStoreEnvWidget extends CondaEnvWidget {
+interface ISize {
+    height: number
+    width: number
+}
+
+export class CondaStoreEnvWidget extends ReactWidget {
+    constructor(condaStoreUrl: string) {
+        super()
+        this.condaStoreUrl = condaStoreUrl
+    }
+
+    protected onResize(msg: Widget.ResizeMessage): void {
+        const { height, width } = msg;
+        this._resizeSignal.emit({ height, width });
+        super.onResize(msg);
+    }
+
     render(): JSX.Element {
         return (
             <UseSignal
@@ -15,6 +31,7 @@ export class CondaStoreEnvWidget extends CondaEnvWidget {
                     <NbCondaStore
                         height={size.height}
                         width={size.width}
+                        condaStoreUrl={this.condaStoreUrl}
                     />
                 )}
             </UseSignal>
@@ -23,4 +40,5 @@ export class CondaStoreEnvWidget extends CondaEnvWidget {
 
     // Possibly remove; we aren't using it inside NbCondaStore
     protected _resizeSignal = new Signal<CondaStoreEnvWidget, ISize>(this);
+    protected condaStoreUrl: string
 }
