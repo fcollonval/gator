@@ -298,7 +298,7 @@ function IconRender({
         />
       );
     }
-  } else if (version_selected !== 'none') {
+  } else if (version_selected !== '') {
     icon = (
       <FontAwesomeIcon
         icon={faCheckSquare}
