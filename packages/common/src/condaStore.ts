@@ -138,6 +138,14 @@ export async function fetchEnvironmentPackages(
   return {};
 }
 
+/**
+ * List the packages for the given build.
+ *
+ * @async
+ * @param {number} build_id - Build for which the packages are to be listed
+ * @return {Promise<IPaginatedResult<ICondaStorePackage>>} List of packages that are part of the
+ * given build
+ */
 export async function fetchBuildPackages(
   build_id: number
 ): Promise<IPaginatedResult<ICondaStorePackage>> {

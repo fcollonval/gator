@@ -8,21 +8,25 @@ import useInView from 'react-cool-inview';
 
 export const ENVIRONMENT_PANEL_WIDTH = 250;
 
-interface ICondaStoreEnvListProps {
-  height: number;
-  isLoading: boolean;
-  environments: Array<ICondaStoreEnvironment>;
-  selected: string;
-  onSelectedChange(environment: string, namespace: string): void;
-  onCreate(): void;
-  onClone(): void;
-  onImport(): void;
-  onExport(): void;
-  onRefresh(): void;
-  onRemove(): void;
-  onBottomHit(): Promise<void>;
-}
-
+/**
+ * List component for showing conda-store environments.
+ *
+ * @param {number} height - Height of the component
+ * @param {boolean} isLoading - True if the parent widget is loading data, false otherwise
+ * @param {Array<ICondaStoreEnvironment>} environments - List of environments to display
+ * @param {string} selected - Name of the currently selected environment
+ * @param {function} onSelectedChange - Callback which is triggered when an environment is selected
+ * @param {function} onCreate - Callback triggered when the create button is clicked
+ * @param {function} onClone - Callback triggered when the clone button is clicked
+ * @param {function} onImport - Callback triggered when the import button is clicked
+ * @param {function} onExport - Callback triggered when the export button is clicked
+ * @param {function} onRefresh - Callback triggered when the refresh button is clicked; should
+ * refresh the packages
+ * @param {function} onRemove - Callback triggered when the remove button is clicked
+ * @param {function} onBottomHit - Callback triggered when the user scrolls to the bottom of the
+ * environment list; this function should load the next page of environments to display
+ * @return {JSX.Element} Component containing a list of conda-store environments
+ */
 export function CondaStoreEnvList({
   height,
   isLoading,
@@ -36,7 +40,20 @@ export function CondaStoreEnvList({
   onRefresh,
   onRemove,
   onBottomHit
-}: ICondaStoreEnvListProps): JSX.Element {
+}: {
+  height: number;
+  isLoading: boolean;
+  environments: Array<ICondaStoreEnvironment>;
+  selected: string;
+  onSelectedChange(environment: string, namespace: string): void;
+  onCreate(): void;
+  onClone(): void;
+  onImport(): void;
+  onExport(): void;
+  onRefresh(): void;
+  onRemove(): void;
+  onBottomHit(): Promise<void>;
+}): JSX.Element {
   const { observe } = useInView({
     onChange: async ({ inView, unobserve, observe }) => {
       if (inView) {

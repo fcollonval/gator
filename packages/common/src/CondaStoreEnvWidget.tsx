@@ -4,6 +4,10 @@ import { UseSignal } from '@jupyterlab/apputils';
 import { CondaEnvWidget, ISize } from './CondaEnvWidget';
 import { NbCondaStore } from './components/NbCondaStore';
 
+/**
+ * Widget which wraps the conda-store environment widgets, emitting resize signals.
+ * @extends CondaEnvWidget
+ */
 export class CondaStoreEnvWidget extends CondaEnvWidget {
   render(): JSX.Element {
     return (

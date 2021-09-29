@@ -31,6 +31,17 @@ const CONDASTOREENVID = '@condastore/gator-lab:plugin';
 const TOUR_DELAY = 1000;
 const TOUR_TIMEOUT = 5 * TOUR_DELAY + 1;
 
+/**
+ * Activate the conda-store menu entry.
+ *
+ * @async
+ * @param {JupyterFrontEnd} app - Handle to the Jupyter frontend
+ * @param {ICommandPalette | null} palette - Jupyterlab command palette
+ * @param {IMainMenu | null} menu - Jupyterlab menu where the package manager will be launched from
+ * @param {ILayoutRestorer | null} restorer - Widget which restores the layout when the app is
+ * reloaded
+ * @return {Promise<void>}
+ */
 async function activateCondaStoreEnv(
   app: JupyterFrontEnd,
   palette: ICommandPalette | null,

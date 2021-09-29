@@ -8,15 +8,20 @@ import {
   ENVIRONMENT_PANEL_WIDTH
 } from './CondaStoreEnvList';
 
-export interface INbCondaStoreProps {
-  height: number;
-  width: number;
-}
-
+/**
+ * Conda-store environment management component.
+ *
+ * @param {number} height - Height of the widget
+ * @param {number} width - Width of the widget
+ * @return {JSX.Element}
+ */
 export function NbCondaStore({
   height,
   width
-}: INbCondaStoreProps): JSX.Element {
+}: {
+  height: number;
+  width: number;
+}): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [activeEnvironment, setActiveEnvironment] = useState('');
   const [activeNamespace, setActiveNamespace] = useState('');
@@ -27,7 +32,10 @@ export function NbCondaStore({
   const [hasMoreData, setHasMoreData] = useState(true);
 
   /**
-   * Load the environments; more requests are made when the user scrolls down.
+   * Load the next page of environments.
+   *
+   * @async
+   * @return {Promise<void>}
    */
   const loadEnvironments = useCallback(async () => {
     if (hasMoreData && !isLoading) {
@@ -42,6 +50,14 @@ export function NbCondaStore({
     }
   }, [hasMoreData, isLoading, environments, environmentPage]);
 
+  /**
+   * Change the active environment and namespace.
+   *
+   * @async
+   * @param {string} environment - Newly selected environment name
+   * @param {string} namespace - Newly selected namespace name
+   * @return {Promise<void>}
+   */
   async function environmentChange(
     environment: string,
     namespace: string
@@ -66,7 +82,13 @@ export function NbCondaStore({
     return;
   }
 
-  async function refreshEnvironments() {
+  /**
+   * Clear the current set of environments.
+   *
+   * @async
+   * @return {Promise<void>}
+   */
+  async function clearEnvironments() {
     setActiveEnvironment('');
     setActiveNamespace('');
     setEnvironments([]);
@@ -78,6 +100,7 @@ export function NbCondaStore({
     return;
   }
 
+  // Whenever the list of environments is empty, load a new page of environments.
   useEffect(() => {
     if (environments.length === 0 && hasMoreData && environmentPage === 1) {
       loadEnvironments();
@@ -96,7 +119,7 @@ export function NbCondaStore({
         onClone={cloneEnvironment}
         onImport={importEnvironment}
         onExport={exportEnvironment}
-        onRefresh={refreshEnvironments}
+        onRefresh={clearEnvironments}
         onRemove={removeEnvironment}
         onBottomHit={loadEnvironments}
       />

@@ -12,24 +12,31 @@ import {
   ICondaStorePackage
 } from '../condaStore';
 
-interface ICondaStorePkgPanelProps {
-  height: number;
-  width: number;
-  namespace: string;
-  environment: string;
-}
-
 export interface ICondaStorePackageMapEntry {
   versionInstalled: string;
   packages: Array<ICondaStorePackage>;
 }
 
+/**
+ * Panel for displaying conda-store packages.
+ *
+ * @param {number} height - Height of the widget
+ * @param {number} width - Width of the widget
+ * @param {string} environment - Name of the selected environment
+ * @param {string} namespace - Name of the selected namespace
+ * @return {JSX.Element} Widget which displays conda-store packages.
+ */
 export function CondaStorePkgPanel({
   height,
   width,
   environment,
   namespace
-}: ICondaStorePkgPanelProps): JSX.Element {
+}: {
+  height: number;
+  width: number;
+  namespace: string;
+  environment: string;
+}): JSX.Element {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState(PkgFilters.All);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,10 +77,6 @@ export function CondaStorePkgPanel({
     return;
   }
 
-  async function handleRefreshPackages() {
-    await refreshPackages();
-  }
-
   function handleClick() {
     return;
   }
@@ -86,6 +89,15 @@ export function CondaStorePkgPanel({
     return;
   }
 
+  /**
+   * Group an array of packages together by name into a Map.
+   *
+   * Grouped packages are sorted by version.
+   *
+   * @param {Array<ICondaStorePackage>} pkgs - Array of packages to be grouped
+   * @return {Map<string, ICondaStorePackageMapEntry>} Map where keys are package names, and values
+   * are packages
+   */
   const groupPackages = useCallback((pkgs: Array<ICondaStorePackage>): Map<
     string,
     ICondaStorePackageMapEntry
@@ -108,6 +120,12 @@ export function CondaStorePkgPanel({
     return sortByVersion(grouped);
   }, []);
 
+  /**
+   * Fetch the next page of installed packages from conda-store.
+   *
+   * @async
+   * @return {Promise<Array<ICondaStorePackage>>} Array of installed conda-store packages.
+   */
   const getInstalledPackages = useCallback(async (): Promise<
     Array<ICondaStorePackage>
   > => {
@@ -122,6 +140,13 @@ export function CondaStorePkgPanel({
     return data;
   }, [environment, namespace, installedPackagesPage]);
 
+  /**
+   * Fetch the next page of available packages from conda-store.
+   *
+   * @async
+   * @return {Promise<Array<ICondaStorePackage>>} Array of conda-store packages available for
+   * installation.
+   */
   const getAvailablePackages = useCallback(async (): Promise<
     Array<ICondaStorePackage>
   > => {
@@ -132,6 +157,22 @@ export function CondaStorePkgPanel({
     return data;
   }, [packagesPage]);
 
+  /**
+   * Load more packages.
+   *
+   * This function calls `getAvailablePackages` once to get the next page of available packages
+   * and updates the list of packages with the result of the response. Next, it checks whether each
+   * available package is installed. Since installed packages are also paginated by conda-store, we
+   * must fetch enough pages of installed packages to know whether the last available package has
+   * already been installed. To know whether we've fetched enough installed packages, we first check
+   * the name of the last installed package that we've already fetched; if alphabetically it comes
+   * after the last fetched available package, we know we've fetched enough; otherwise, we continue
+   * fetching installed packages until either we have enough or the last page of installed packages
+   * has been fetched.
+   *
+   * @async
+   * @return {Promise<void>}
+   */
   const loadPackages = useCallback(async () => {
     if (hasMoreData && !isLoading) {
       setIsLoading(true);
@@ -193,6 +234,13 @@ export function CondaStorePkgPanel({
     installedPackages
   ]);
 
+  /**
+   * Sort a Map of packages by version.
+   *
+   * @param {Map<string, ICondaStorePackageMapEntry>} pkgMap - Map of packages to sort
+   * @return {Map<string, ICondaStorePackageMapEntry>} Map of packages where the versions are sorted
+   * in ascending order
+   */
   function sortByVersion(
     pkgMap: Map<string, ICondaStorePackageMapEntry>
   ): Map<string, ICondaStorePackageMapEntry> {
@@ -213,6 +261,14 @@ export function CondaStorePkgPanel({
     return sorted;
   }
 
+  /**
+   * Merge two package maps.
+   *
+   * @param {Map<string, ICondaStorePackageMapEntry>} map1 - First package map to merge
+   * @param {Map<string, ICondaStorePackageMapEntry>} map2 - Second package map to merge
+   * @return {Map<string, ICondaStorePackageMapEntry>} Map containing both the packages and version
+   * of each package from both input Maps.
+   */
   function mergeMaps(
     map1: Map<string, ICondaStorePackageMapEntry>,
     map2: Map<string, ICondaStorePackageMapEntry>
@@ -234,6 +290,15 @@ export function CondaStorePkgPanel({
     return merged;
   }
 
+  /**
+   * Refresh the packages list.
+   *
+   * This function resets the state of packages, packagesPage, number of packages, and hasMoreData;
+   * refreshing the packages is actually done by the useEffect hook below.
+   *
+   * @async
+   * @return {Promise<void>}
+   */
   async function refreshPackages() {
     setPackages(new Map([]));
     setPackagesPage(1);
@@ -275,7 +340,7 @@ export function CondaStorePkgPanel({
         onUpdateAll={handleUpdateAll}
         onApply={handleApply}
         onCancel={handleCancel}
-        onRefreshPackages={handleRefreshPackages}
+        onRefreshPackages={refreshPackages}
       />
       <CondaStorePkgList
         height={height - PACKAGE_TOOLBAR_HEIGHT}

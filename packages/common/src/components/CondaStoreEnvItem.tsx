@@ -2,21 +2,30 @@ import React from 'react';
 import { style } from 'typestyle';
 import { GlobalStyle } from './globalStyles';
 
-interface IEnvItemProps {
-  environment: string;
-  namespace: string;
-  selected?: boolean;
-  onClick(environment: string, namespace: string): void;
-  observe: (element?: HTMLElement) => void;
-}
-
+/**
+ * List item representing a conda-store environment.
+ *
+ * @param {string} environment - Name of the environment
+ * @param {string} namespace - Name of the namespace
+ * @param {boolean} selected - Whether or not the item is selected
+ * @param {function} onClick - Callback for when the item is clicked
+ * @param {function} [observe] - useInView observer; usually this is null, unless this is the last
+ * element in the list component
+ * @return {JSX.Element} Conda-store environment list item
+ */
 export function CondaStoreEnvItem({
   environment,
   namespace,
   selected,
   onClick,
   observe = null
-}: IEnvItemProps): JSX.Element {
+}: {
+  environment: string;
+  namespace: string;
+  selected?: boolean;
+  onClick(environment: string, namespace: string): void;
+  observe: (element?: HTMLElement) => void;
+}): JSX.Element {
   return (
     <div
       className={selected ? Style.SelectedItem : Style.Item}

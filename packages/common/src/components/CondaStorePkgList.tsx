@@ -20,17 +20,21 @@ import { ICondaStorePackageMapEntry } from './CondaStorePkgPanel';
 
 const HEADER_HEIGHT = 29;
 
-interface IPkgListProps {
-  height: number;
-  packages: Map<string, ICondaStorePackageMapEntry>;
-  onPkgClick(pkg: ICondaStorePackage): void;
-  onPkgChange(pkg: ICondaStorePackage, version: string): void;
-  onPkgGraph(pkg: ICondaStorePackage): void;
-  onBottomHit(): Promise<void>;
-  isLoading: boolean;
-  nPackages: number;
-}
-
+/**
+ * List widget which shows packages and loads more when the user scrolls to the bottom.
+ *
+ * @param {function} onPkgGraph - Callback triggered when the user clicks on the version
+ * @param {function} onPkgChange - Callback triggered when the user changes the dropdown "Change To"
+ * selection
+ * @param {function} onPkgClick - Callback triggered when the user clicks on a package
+ * @param {number} height - Height of the widget
+ * @param {number} width - Width of the widget
+ * @param {Map<string, ICondaStorePackageMapEntry>} packages - Map of packages to display in the
+ * widget
+ * @param {function} observe - useInView observer for detecting that the user has scrolled to the
+ * bottom
+ * @return {JSX.Element} List widget containing the packages.
+ */
 function InfiniteListWidget({
   onPkgGraph,
   onPkgChange,
@@ -68,11 +72,36 @@ function InfiniteListWidget({
   );
 }
 
+/**
+ * Get the key/value pair from a map at an integer index.
+ *
+ * Since Map objects preserve insertion order, indexing works similarly to arrays.
+ *
+ * @template K - Key type of the map
+ * @template V - Value type of the map
+ * @param {Map<K, V>} map - Map to be indexed
+ * @param {number} index - Index for which the key/value pair are to be gotten
+ * @return {{ key: K; value: V }} Key/value pair from the map at the given index.
+ */
 function indexMap<K, V>(map: Map<K, V>, index: number): { key: K; value: V } {
   const key = Array.from(map.keys())[index];
   return { key, value: map.get(key) };
 }
 
+/**
+ * Generate a function which renders a row inside a FixedSizeList.
+ *
+ * @param {(pkg: ICondaStorePackage) => void} onPkgGraph - Callback triggered when the user clicks
+ * on the version
+ * @param {(pkg: ICondaStorePackage, version: string) => void} onPkgChange - Callback triggered when
+ * the user changes the dropdown "Change To"
+ * @param {(pkg: ICondaStorePackage) => void} onPkgClick - Callback triggered when the user clicks
+ * on a package
+ * @param {(element?: HTMLElement) => void} observe - useInview observer for detecting that the user
+ * has scrolled to the bottom of the list
+ * @return {(props: ListChildComponentProps) => JSX.Element} Function to be passed to FixedSizeList
+ * for rendering each row.
+ */
 function generateRowRenderer(
   onPkgGraph: (pkg: ICondaStorePackage) => void,
   onPkgChange: (pkg: ICondaStorePackage, version: string) => void,
@@ -130,6 +159,26 @@ function generateRowRenderer(
   return rowRenderer;
 }
 
+/**
+ * Package list component for displaying conda-store packages.
+ *
+ * Both installed and available packages are displayed. Installed packages have a different icon and
+ * show a version string.
+ *
+ * @param {number} height - Height of the widget
+ * @param {Map<string, ICondaStorePackageMapEntry>} packages - Map of packages to display in the
+ * widget
+ * @param {function} onPkgClick - Callback triggered when the user clicks on a package
+ * @param {function} onPkgChange - Callback triggered when the user changes the dropdown "Change To"
+ * selection
+ * @param {function} onPkgGraph - Callback triggered when the user clicks on the version
+ * @param {function} onBottomHit - Callback triggered when the user scrolls to the bottom of the
+ * packages list
+ * @param {boolean} isLoading - True if the parent widget is loading data, false otherwise
+ * @param {number} nPackages - Number of packages in the list. The widget will stop calling
+ * onBottomHit when this number of elements exists in the list.
+ * @return {JSX.Element} Component containing a list of conda-store packages.
+ */
 export function CondaStorePkgList({
   height,
   packages,
@@ -139,7 +188,16 @@ export function CondaStorePkgList({
   onBottomHit,
   isLoading,
   nPackages
-}: IPkgListProps): JSX.Element {
+}: {
+  height: number;
+  packages: Map<string, ICondaStorePackageMapEntry>;
+  onPkgClick(pkg: ICondaStorePackage): void;
+  onPkgChange(pkg: ICondaStorePackage, version: string): void;
+  onPkgGraph(pkg: ICondaStorePackage): void;
+  onBottomHit(): Promise<void>;
+  isLoading: boolean;
+  nPackages: number;
+}): JSX.Element {
   const { observe } = useInView({
     rootMargin: '200px 0px',
     onChange: async ({ inView, unobserve, observe }) => {
@@ -214,6 +272,13 @@ export function CondaStorePkgList({
   );
 }
 
+/**
+ * Compute the class name for a given row.
+ *
+ * @param {number} index - Index of the row
+ * @param {boolean} isSelected - True if the row is selected, false otherwise
+ * @return {string} Class name of the row
+ */
 function rowClassName(index: number, isSelected: boolean): string {
   if (index >= 0) {
     return index % 2 === 0
@@ -222,6 +287,14 @@ function rowClassName(index: number, isSelected: boolean): string {
   }
 }
 
+/**
+ * Dropdown menu containing options for changing a package.
+ *
+ * @param {ICondaStorePackage} pkg - Package for which the dropdown is to be created
+ * @param {function} onPkgChange - Callback triggered when the user selects an option in the
+ * dropdown
+ * @return {JSX.Element} Component containing a dropdown menu for options to change a package
+ */
 function ChangeRender({
   pkg,
   onPkgChange
@@ -267,6 +340,19 @@ function ChangeRender({
   );
 }
 
+/**
+ * Icon to display for a package.
+ *
+ * A different icon will be displayed depending on whether:
+ * 1. The package is not installed
+ * 2. The package is installed
+ * 3. The user is has chosen to modify the installed version
+ *
+ * @param {string} version_selected - Selected version of a package
+ * @param {string} version_installed - Installed version of a package; if none, this is an empty
+ * string
+ * @return {JSX.Element} Icon representing the state of a package.
+ */
 function IconRender({
   version_selected,
   version_installed
@@ -321,6 +407,13 @@ function IconRender({
   );
 }
 
+/**
+ * Component which displays the name of a package.
+ *
+ * @param {string} home - URL to the package home page
+ * @param {string} name - Name of the package
+ * @return {JSX.Element} Widget displaying the package name (with a link to its home page, if applicable)
+ */
 function NameRender({
   home,
   name
@@ -352,6 +445,13 @@ function NameRender({
   );
 }
 
+/**
+ * Component which displays the installed version of a package.
+ *
+ * @param {string} versionInstalled - Installed version of a package
+ * @param {boolean} updatable - True if the package is updatable, false otherwise
+ * @return {JSX.Element} Widget which shows the package version.
+ */
 function VersionRender({
   versionInstalled,
   updatable
