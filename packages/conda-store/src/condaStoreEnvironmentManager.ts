@@ -6,7 +6,9 @@ import {
   fetchPackages,
   fetchEnvironmentPackages,
   ICondaStorePackage,
-  condaStoreServerStatus
+  condaStoreServerStatus,
+  searchInstalled,
+  searchAvailable
 } from './condaStore';
 
 /**
@@ -88,6 +90,11 @@ export class CondaStoreEnvironmentManager implements IEnvironmentManager {
 
   remove(name: string): Promise<void> {
     return Promise.resolve(void 0);
+  }
+
+  async search(searchTerm: string, name: string): Promise<Array<Conda.IPackage>> {
+    const {namespace, environment} = parseEnvironment(name)
+    return await searchInstalled(this._baseUrl, namespace, environment, searchTerm);
   }
 
   get isDisposed(): boolean {
@@ -314,6 +321,7 @@ export class CondaStorePackageManager implements Conda.IPackageManager {
     if (this.hasMoreAvailablePackages) {
       const { count, data } = await fetchPackages(
         this.baseUrl,
+        undefined,
         this.availablePage,
         this.availablePageSize
       );
@@ -348,6 +356,7 @@ export class CondaStorePackageManager implements Conda.IPackageManager {
         this.baseUrl,
         namespaceName,
         envName,
+        undefined,
         this.installedPage,
         this.installedPageSize
       );
@@ -541,5 +550,18 @@ export class CondaStorePackageManager implements Conda.IPackageManager {
     cancellable: boolean
   ): Promise<Conda.IPackageDeps> {
     return;
+  }
+
+  async searchPackages(environment: string, searchTerm: string): Promise<Array<Conda.IPackage>> {
+      const {
+        environment: envName,
+        namespace: namespaceName
+      } = this.parseEnvironment(
+        environment !== undefined ? environment : this.environment
+      );
+      const installed = await searchInstalled(this.baseUrl, namespaceName, envName, searchTerm)
+      const available = await searchAvailable(this.baseUrl, searchTerm)
+
+      return this.mergeConvert(installed, available)
   }
 }
