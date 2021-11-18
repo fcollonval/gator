@@ -84,11 +84,18 @@ export function CondaPkgList({
 }): JSX.Element {
   const { observe } = useInView({
     rootMargin: '200px 0px',
+    // Cannot use `onEnter` because it does not fire in the case when the
+    // browser is so tall that the bottom element is already in view
     onChange: async ({ inView, unobserve, observe }) => {
       if (inView) {
         unobserve();
         await onPkgBottomHit();
-        observe();
+        // react-cool-inview's docs may lead you to believe that the observe()
+        // function should be called here; however, in manual testing, calling
+        // observe() causes an infinite loop when there are no more packages to
+        // be fetched, in other words, when the user has reached the actual end
+        // of the "infinite" scroll. Here's the loop:
+        // observe() -> onChange({ inView: true }) -> observe() -> etc.
       }
     }
   });
