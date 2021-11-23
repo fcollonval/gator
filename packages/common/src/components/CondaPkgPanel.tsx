@@ -99,7 +99,6 @@ export class CondaPkgPanel extends React.Component<
     this.handleApply = this.handleApply.bind(this);
     this.handleCancel = this.handleCancel.bind(this);
     this.handleRefreshPackages = this.handleRefreshPackages.bind(this);
-    this.onPkgBottomHit = this.onPkgBottomHit.bind(this);
   }
 
   private async _updatePackages(): Promise<void> {
@@ -460,32 +459,6 @@ export class CondaPkgPanel extends React.Component<
     }
   }
 
-  /**
-   * Callback which is triggered when the bottom of the package list is visible.
-   *
-   * If the model supports it, more packages will be loaded.
-   *
-   * @async
-   * @return {Promise<void>}
-   */
-  async onPkgBottomHit(): Promise<void> {
-    console.log('onPkgBottomHit', 'this.state.isLoading', this.state.isLoading);
-    if (!this.state.isLoading) {
-      this.setState({
-        isLoading: true
-      });
-      console.log('this._model.loadMorePackages', this._model.loadMorePackages);
-      const packages = await this._model.loadMorePackages?.();
-      console.log('packages', packages);
-      if (packages !== undefined) {
-        this.setState({ packages });
-      }
-      this.setState({
-        isLoading: false
-      });
-    }
-  }
-
   async loadNextPage(): Promise<void> {
     if (!this._model.loadMorePackages) {
       return;
@@ -554,7 +527,6 @@ export class CondaPkgPanel extends React.Component<
           onPkgClick={this.handleClick}
           onPkgChange={this.handleVersionSelection}
           onPkgGraph={this.handleDependenciesGraph}
-          // onPkgBottomHit={this.onPkgBottomHit}
           hasNextPage={Boolean(
             this._model.hasMorePackages && this._model.hasMorePackages()
           )}
