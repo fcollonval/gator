@@ -47,10 +47,6 @@ export interface IPkgListProps {
    * Package item graph dependencies handler
    */
   onPkgGraph: (pkg: Conda.IPackage) => void;
-  /**
-   * Reference with triggers callback when the user scrolls to the bottom of the package list.
-   */
-  observe: (element?: HTMLElement) => void;
 
   hasNextPage: boolean;
   isNextPageLoading: boolean;
