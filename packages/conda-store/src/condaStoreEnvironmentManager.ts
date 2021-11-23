@@ -453,6 +453,10 @@ export class CondaStorePackageManager implements Conda.IPackageManager {
     return this.mergeConvert(installed, available);
   }
 
+  hasMorePackages(): boolean {
+    return this.hasMoreInstalledPackages || this.hasMoreAvailablePackages;
+  }
+
   /**
      * Truncate the installed or available packages for display to the user.
      *

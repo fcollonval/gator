@@ -10,7 +10,7 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { classes, style } from 'typestyle';
 import { NestedCSSProperties } from 'typestyle/lib/types';
-import useInView from 'react-cool-inview';
+import InfiniteLoader from 'react-window-infinite-loader';
 import {
   CONDA_PACKAGES_PANEL_ID,
   CONDA_PACKAGE_SELECT_CLASS
@@ -51,69 +51,14 @@ export interface IPkgListProps {
    * Reference with triggers callback when the user scrolls to the bottom of the package list.
    */
   observe: (element?: HTMLElement) => void;
-}
 
-/**
- * Wrapper for CondaPkgView which triggers a callback when the bottom of the list is visible.
- *
- * @param {boolean} hasDescription - True if package description is available
- * @param {number} height - Height of the component
- * @param {Array<Conda.IPackage>} packages - List of packages to display
- * @param {function} onPkgClick - Callback triggered when package is clicked
- * @param {function} onPkgChange - Callback triggered when the selected version is changed
- * @param {function} onPkgGraph - Callback triggered when the version string is clicked
- * @param {function} onPkgBottomHit - Callback triggered when the bottom of the list is visible
- * @return {JSX.Element} Component showing the list of packages
- */
-export function CondaPkgList({
-  hasDescription,
-  height,
-  packages,
-  onPkgClick,
-  onPkgChange,
-  onPkgGraph,
-  onPkgBottomHit
-}: {
-  hasDescription: boolean;
-  height: number;
-  packages: Conda.IPackage[];
-  onPkgClick: (pkg: Conda.IPackage) => void;
-  onPkgChange: (pkg: Conda.IPackage, version: string) => void;
-  onPkgGraph: (pkg: Conda.IPackage) => void;
-  onPkgBottomHit: () => Promise<void>;
-}): JSX.Element {
-  const { observe } = useInView({
-    rootMargin: '200px 0px',
-    // Cannot use `onEnter` because it does not fire in the case when the
-    // browser is so tall that the bottom element is already in view
-    onChange: async ({ inView, unobserve, observe }) => {
-      if (inView) {
-        unobserve();
-        await onPkgBottomHit();
-        // react-cool-inview's docs may lead you to believe that the observe()
-        // function should be called here; however, in manual testing, calling
-        // observe() causes an infinite loop when there are no more packages to
-        // be fetched, in other words, when the user has reached the actual end
-        // of the "infinite" scroll. Here's the loop:
-        // observe() -> onChange({ inView: true }) -> observe() -> etc.
-      }
-    }
-  });
-  return (
-    <CondaPkgView
-      hasDescription={hasDescription}
-      height={height}
-      packages={packages}
-      onPkgClick={onPkgClick}
-      onPkgChange={onPkgChange}
-      onPkgGraph={onPkgGraph}
-      observe={observe}
-    />
-  );
+  hasNextPage: boolean;
+  isNextPageLoading: boolean;
+  loadNextPage: (startIndex: number, stopIndex: number) => Promise<void>;
 }
 
 /** React component for the package list */
-class CondaPkgView extends React.Component<IPkgListProps> {
+export class CondaPkgList extends React.Component<IPkgListProps> {
   public static defaultProps: Partial<IPkgListProps> = {
     hasDescription: false,
     packages: []
@@ -255,6 +200,15 @@ class CondaPkgView extends React.Component<IPkgListProps> {
   protected rowRenderer = (props: ListChildComponentProps): JSX.Element => {
     const { data, index, style } = props;
     const pkg = data[index] as Conda.IPackage;
+
+    if (index === data.length) {
+      return (
+        <div className={this.rowClassName(index, pkg)} style={style} role="row">
+          Loading ...
+        </div>
+      );
+    }
+
     return (
       <div
         className={this.rowClassName(index, pkg)}
@@ -263,7 +217,6 @@ class CondaPkgView extends React.Component<IPkgListProps> {
           this.props.onPkgClick(pkg);
         }}
         role="row"
-        ref={index === data.length - 1 ? this.props.observe : null}
       >
         <div className={classes(Style.Cell, Style.StatusSize)} role="gridcell">
           {this.iconRender(pkg)}
@@ -346,17 +299,34 @@ class CondaPkgView extends React.Component<IPkgListProps> {
                     Channel
                   </div>
                 </div>
-                <FixedSizeList
-                  height={Math.max(0, this.props.height - HEADER_HEIGHT)}
-                  overscanCount={3}
-                  itemCount={this.props.packages.length}
-                  itemData={this.props.packages}
-                  itemKey={(index, data): React.Key => data[index].name}
-                  itemSize={40}
-                  width={width}
+                <InfiniteLoader
+                  isItemLoaded={index =>
+                    !this.props.hasNextPage ||
+                    index < this.props.packages.length
+                  }
+                  itemCount={
+                    this.props.hasNextPage
+                      ? this.props.packages.length + 1
+                      : this.props.packages.length
+                  }
+                  loadMoreItems={this.props.loadNextPage}
                 >
-                  {this.rowRenderer}
-                </FixedSizeList>
+                  {({ onItemsRendered, ref }) => (
+                    <FixedSizeList
+                      height={Math.max(0, this.props.height - HEADER_HEIGHT)}
+                      overscanCount={3}
+                      itemCount={this.props.packages.length}
+                      itemData={this.props.packages}
+                      itemKey={(index, data): React.Key => data[index].name}
+                      itemSize={40}
+                      width={width}
+                      onItemsRendered={onItemsRendered}
+                      ref={ref}
+                    >
+                      {this.rowRenderer}
+                    </FixedSizeList>
+                  )}
+                </InfiniteLoader>
               </>
             );
           }}

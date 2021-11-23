@@ -469,11 +469,14 @@ export class CondaPkgPanel extends React.Component<
    * @return {Promise<void>}
    */
   async onPkgBottomHit(): Promise<void> {
+    console.log('onPkgBottomHit', 'this.state.isLoading', this.state.isLoading);
     if (!this.state.isLoading) {
       this.setState({
         isLoading: true
       });
+      console.log('this._model.loadMorePackages', this._model.loadMorePackages);
       const packages = await this._model.loadMorePackages?.();
+      console.log('packages', packages);
       if (packages !== undefined) {
         this.setState({ packages });
       }
@@ -481,6 +484,18 @@ export class CondaPkgPanel extends React.Component<
         isLoading: false
       });
     }
+  }
+
+  async loadNextPage(): Promise<void> {
+    if (!this._model.loadMorePackages) {
+      return;
+    }
+    this.setState({ isLoading: true });
+    const packages = await this._model.loadMorePackages();
+    this.setState({
+      packages,
+      isLoading: false
+    });
   }
 
   render(): JSX.Element {
@@ -539,7 +554,12 @@ export class CondaPkgPanel extends React.Component<
           onPkgClick={this.handleClick}
           onPkgChange={this.handleVersionSelection}
           onPkgGraph={this.handleDependenciesGraph}
-          onPkgBottomHit={this.onPkgBottomHit}
+          // onPkgBottomHit={this.onPkgBottomHit}
+          hasNextPage={Boolean(
+            this._model.hasMorePackages && this._model.hasMorePackages()
+          )}
+          isNextPageLoading={this.state.isLoading}
+          loadNextPage={this.loadNextPage.bind(this)}
         />
       </div>
     );
