@@ -199,7 +199,13 @@ export class CondaPkgList extends React.Component<IPkgListProps> {
 
     if (index === data.length) {
       return (
-        <div className={this.rowClassName(index, pkg)} style={style} role="row">
+        <div
+          className={
+            index % 2 === 0 ? Style.RowEven(false) : Style.RowOdd(false)
+          }
+          style={style}
+          role="row"
+        >
           Loading ...
         </div>
       );
@@ -247,6 +253,9 @@ export class CondaPkgList extends React.Component<IPkgListProps> {
   };
 
   render(): JSX.Element {
+    const { hasNextPage, packages } = this.props;
+    const itemCount =
+      packages.length && hasNextPage ? packages.length + 1 : packages.length;
     return (
       <div id={CONDA_PACKAGES_PANEL_ID} role="grid">
         <AutoSizer disableHeight>
@@ -297,23 +306,20 @@ export class CondaPkgList extends React.Component<IPkgListProps> {
                 </div>
                 <InfiniteLoader
                   isItemLoaded={index =>
-                    !this.props.hasNextPage ||
-                    index < this.props.packages.length
+                    !hasNextPage || index < packages.length
                   }
-                  itemCount={
-                    this.props.hasNextPage
-                      ? this.props.packages.length + 1
-                      : this.props.packages.length
-                  }
+                  itemCount={itemCount}
                   loadMoreItems={this.props.loadNextPage}
                 >
                   {({ onItemsRendered, ref }) => (
                     <FixedSizeList
                       height={Math.max(0, this.props.height - HEADER_HEIGHT)}
                       overscanCount={3}
-                      itemCount={this.props.packages.length}
-                      itemData={this.props.packages}
-                      itemKey={(index, data): React.Key => data[index].name}
+                      itemCount={itemCount}
+                      itemData={packages}
+                      itemKey={(index, data): React.Key =>
+                        data[index] ? data[index].name : 'undefined'
+                      }
                       itemSize={40}
                       width={width}
                       onItemsRendered={onItemsRendered}
