@@ -174,21 +174,14 @@ export class CondaPkgPanel extends React.Component<
       return;
     }
 
-    const selectIdx = this.state.selected.indexOf(pkg);
-    const selection = this.state.selected;
-    if (selectIdx >= 0) {
-      this.state.selected.splice(selectIdx, 1);
-    }
+    // If the clicked package was already selected, deselect it
+    const selection = this.state.selected.filter(({name}) => name !== pkg.name);
 
     if (pkg.version_installed) {
       if (pkg.version_installed === pkg.version_selected) {
-        if (pkg.updatable) {
-          pkg.version_selected = ''; // Set for update
-          selection.push(pkg);
-        } else {
-          pkg.version_selected = 'none'; // Set for removal
-          selection.push(pkg);
-        }
+        pkg.version_selected = pkg.updatable ? '' : 'none';
+        selection.push(pkg);
+
       } else {
         if (pkg.version_selected === 'none') {
           pkg.version_selected = pkg.version_installed;
@@ -207,7 +200,6 @@ export class CondaPkgPanel extends React.Component<
     }
 
     this.setState({
-      packages: this.state.packages,
       selected: selection
     });
   }
@@ -460,6 +452,26 @@ export class CondaPkgPanel extends React.Component<
     }
   }
 
+  combinePackagesSelected(packages: Array<Conda.IPackage>, selected: Array<Conda.IPackage>): Array<Conda.IPackage> {
+    // Update the selected state of each package. Generate a hashmap for the lookup; then update
+    // each of the new packages with info from the list of selected packages; then convert back
+    // to an array to update state.
+    const packageMap = new Map(packages.map(pkg => [pkg.name, pkg]))
+    selected.forEach(({name, version_installed, version_selected}) => {
+        if (packageMap.has(name)) {
+            packageMap.set(
+                name,
+                {...packageMap.get(name), version_installed, version_selected}
+            )
+        }
+    })
+    const combined: Array<Conda.IPackage> = []
+    packageMap.forEach(pkg => {
+        combined.push(pkg)
+    })
+    return combined
+  }
+
   /**
    * Callback which is triggered when the bottom of the package list is visible.
    *
@@ -484,19 +496,15 @@ export class CondaPkgPanel extends React.Component<
   }
 
   render(): JSX.Element {
-    let filteredPkgs: Conda.IPackage[] = [];
-    if (this.state.activeFilter === PkgFilters.All) {
-      filteredPkgs = this.state.packages;
-    } else if (this.state.activeFilter === PkgFilters.Installed) {
-      filteredPkgs = this.state.packages.filter(pkg => pkg.version_installed);
+    let filteredPkgs = this.combinePackagesSelected(this.state.packages, this.state.selected);
+    if (this.state.activeFilter === PkgFilters.Installed) {
+      filteredPkgs = filteredPkgs.filter(pkg => pkg.version_installed);
     } else if (this.state.activeFilter === PkgFilters.Available) {
-      filteredPkgs = this.state.packages.filter(pkg => !pkg.version_installed);
+      filteredPkgs = filteredPkgs.filter(pkg => !pkg.version_installed);
     } else if (this.state.activeFilter === PkgFilters.Updatable) {
-      filteredPkgs = this.state.packages.filter(pkg => pkg.updatable);
+      filteredPkgs = filteredPkgs.filter(pkg => pkg.updatable);
     } else if (this.state.activeFilter === PkgFilters.Selected) {
-      filteredPkgs = this.state.packages.filter(
-        pkg => this.state.selected.indexOf(pkg) >= 0
-      );
+      filteredPkgs = this.state.selected
     }
 
     let searchPkgs: Conda.IPackage[] = [];
