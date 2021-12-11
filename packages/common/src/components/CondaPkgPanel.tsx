@@ -174,29 +174,33 @@ export class CondaPkgPanel extends React.Component<
       return;
     }
 
-    // If the clicked package was already selected, deselect it
-    const selection = this.state.selected.filter(({name}) => name !== pkg.name);
+    let selection: Array<Conda.IPackage> = []
 
-    if (pkg.version_installed) {
-      if (pkg.version_installed === pkg.version_selected) {
-        pkg.version_selected = pkg.updatable ? '' : 'none';
-        selection.push(pkg);
-
-      } else {
-        if (pkg.version_selected === 'none') {
-          pkg.version_selected = pkg.version_installed;
-        } else {
-          pkg.version_selected = 'none'; // Set for removal
-          selection.push(pkg);
-        }
-      }
+    // If the clicked package was already selected, deselect it; otherwise add it to the selected
+    // packages
+    if (this.state.selected.some(({name}) => name === pkg.name)) {
+        selection = this.state.selected.filter(({name}) => name !== pkg.name)
     } else {
-      if (pkg.version_selected !== 'none') {
-        pkg.version_selected = 'none'; // Unselect
-      } else {
-        pkg.version_selected = ''; // Select 'Any'
-        selection.push(pkg);
-      }
+        if (pkg.version_installed) {
+          if (pkg.version_installed === pkg.version_selected) {
+            pkg.version_selected = pkg.updatable ? '' : 'none';
+            selection.push(pkg);
+          } else {
+            if (pkg.version_selected === 'none') {
+              pkg.version_selected = pkg.version_installed;
+            } else {
+              pkg.version_selected = 'none'; // Set for removal
+              selection.push(pkg);
+            }
+          }
+        } else {
+          if (pkg.version_selected !== 'none') {
+            pkg.version_selected = 'none'; // Unselect
+          } else {
+            pkg.version_selected = ''; // Select 'Any'
+            selection.push(pkg);
+          }
+        }
     }
 
     this.setState({
@@ -209,11 +213,7 @@ export class CondaPkgPanel extends React.Component<
       return;
     }
 
-    const selectIdx = this.state.selected.indexOf(pkg);
-    const selection = this.state.selected;
-    if (selectIdx >= 0) {
-      this.state.selected.splice(selectIdx, 1);
-    }
+    let selection = this.state.selected.filter(({name}) => name !== pkg.name)
 
     if (pkg.version_installed) {
       if (pkg.version_installed !== version) {
@@ -228,7 +228,6 @@ export class CondaPkgPanel extends React.Component<
     pkg.version_selected = version;
 
     this.setState({
-      packages: this.state.packages,
       selected: selection
     });
   }
